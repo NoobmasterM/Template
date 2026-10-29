@@ -1,0 +1,112 @@
+-----------------------------------------------Single Update--------------------------------------
+vector<int>segm_tree;
+int op=0;
+
+void build(int node,int left,int right){
+    if(left==right) segm_tree[node]=v[left];
+    else {
+        int middle=(left+right)/2;
+        build(2*node+1,left,middle);
+        build(2*node+2,middle+1,right);
+        segm_tree[node]=min(segm_tree[2*node+1],segm_tree[2*node+2]);
+    }
+}
+
+void update(int node,int left,int right,int x,int y) {
+    if(left==right) segm_tree[node]=y;
+    else {
+        int middle=(left+right)/2;
+        if (x<=middle) update(2*node+1,left,middle,x,y);
+        else update(2*node+2, middle+1,right,x,y);
+        segm_tree[node]=min(segm_tree[2*node+1],segm_tree[2*node+2]);
+    }
+}
+
+
+
+int query(int node,int left,int right,int x,int y) {
+    if (x<=left && right<=y) return segm_tree[node];
+    else{
+        int answer=1e9;
+        int middle=(left+right)/2;
+        if(x<=middle) answer=min(answer,query(2*node+1,left,middle,x,y));
+        if(y>=middle+1) answer=min(answer,query(2*node+2,middle+1,right,x,y));
+
+        return answer;
+    }
+}
+
+---------------------------------------------Operation count--------------------------------------------
+void update(int node, int left, int right, int x, int y){
+  if(x<=left && right<=y) segm_tree[node]++;
+  else{
+    int middle=(left+right)/2;
+    if(x<=middle) update(2*node+1,left,middle,x,y);
+    if(y>=middle+1) update(2*node+2,middle+1,right,x,y);
+  }
+}
+ 
+void query(int node, int left, int right, int x){
+  op+=segm_tree[node];
+  if(left==right) return ;
+  else{
+    int middle = (left + right)/2;
+    if(x<=middle) query(2*node+1,left,middle,x);
+    else query(2*node+2,middle+1,right,x);
+  }
+}
+
+segm_tree.assign(4*n,0);
+//After each operation op=0;
+
+---------------------------------------------Lazy Propogation---------------------------------------------
+const int N=2*1e5;
+
+struct Segment{long long sum, lazy;} segm_tree[4*N];
+vector<int>v;
+
+void build(int node,int left,int right){
+    if(left==right) segm_tree[node].sum=v[left];
+    else {
+        int middle=(left+right)/2;
+        build(2*node+1,left,middle);
+        build(2*node+2,middle+1,right);
+        segm_tree[node].sum=segm_tree[2*node+1].sum+segm_tree[2*node+2].sum;
+    }
+}
+
+void propagate(int node,int left,int right){
+    segm_tree[node].sum+=(right - left + 1)*segm_tree[node].lazy;
+    if(left<right) {
+        segm_tree[2*node+1].lazy+=segm_tree[node].lazy;
+        segm_tree[2*node+2].lazy+=segm_tree[node].lazy;
+    }
+    segm_tree[node].lazy=0;
+}
+
+void update(int node,int left,int right,int x,int y,int value) {
+    propagate(node,left,right);
+    if (x<=left && right<= y) segm_tree[node].lazy +=value;
+    else{
+        int middle=(left+right)/2;
+        if(x<=middle) update(2*node+1,left,middle,x,y,value);
+        if(y>=middle+1) update(2*node+2,middle+1,right,x,y,value);
+
+        propagate(2*node+1,left,middle);
+        propagate(2*node+2,middle+1,right);
+        segm_tree[node].sum=segm_tree[2*node+1].sum+segm_tree[2*node+2].sum;
+    }
+}
+
+long long query(int node,int left,int right,int x,int y) {
+    propagate(node,left,right);
+    if(x<=left && right<=y) return segm_tree[node].sum;
+    else {
+        long long sum=0;
+        int middle=(left+right)/2;
+        if (x<=middle) sum+=query(2*node+1,left,middle,x,y);
+        if (y>=middle+1)sum+=query(2*node+2,middle+1,right,x,y);
+        return sum;
+    }
+}
+

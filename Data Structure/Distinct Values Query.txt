@@ -1,0 +1,98 @@
+typedef long long item;
+
+struct segtree{
+    long long size;
+    vector<item> values;
+    item NEUTRAL_ELEMENT={0};
+    item merge(item a, item b){return a+b;}
+    item single(long long v){return v;}
+
+    void init(long long n) {
+        size = 1;
+        while (size < n) size *= 2;
+        values.resize(2 * size);
+    }
+
+    void build(vector<long long>& a, long long x, long long lx, long long rx) {
+        if (rx - lx == 1) {if (lx < (long long)a.size()) values[x] = single(a[lx]); return;}
+        long long m = (lx + rx) / 2;
+        build(a, 2 * x + 1, lx, m);
+        build(a, 2 * x + 2, m, rx);
+        values[x] = merge(values[2 * x + 1],values[2 * x + 2]);
+    }
+
+    void build(vector<long long>& a){build(a, 0, 0, size);}
+
+    void set(long long i, long long v, long long x, long long lx, long long rx) {
+        if (rx - lx == 1) {values[x] = single(v); return;}
+        long long m = (lx + rx) / 2;
+        if (i < m) set(i, v, 2 * x + 1, lx, m);
+        else set(i, v, 2 * x + 2, m, rx);
+        values[x] = merge(values[2 * x + 1], values[2 * x + 2]);
+    }
+
+    void set(long long i, long long v){set(i, v, 0, 0, size);}
+
+    item calc(long long l, long long r, long long x, long long lx, long long rx) {
+        if (lx >= r || l >= rx) return NEUTRAL_ELEMENT;
+        if (lx >= l && rx <= r) return values[x];
+        long long m = (lx + rx) / 2;
+        return merge(calc(l, r, 2 * x + 1, lx, m),calc(l, r, 2 * x + 2, m, rx));
+    }
+
+    item calc(long long l, long long r){return calc(l, r, 0, 0, size);}
+};
+
+ int n,q;
+ cin>>n>>q;
+ vector<int>v(n);
+ for(auto &x: v) cin>>x;
+
+ vector<vector<pair<int,int>>>lefts(n);
+ vector<int>ans(q);
+ for(int i=0; i<q; i++){
+    int a,b;
+    cin>>a>>b;
+    a--;
+    b--;
+    lefts[b].push_back({a,i});
+ }
+
+ vector<int>values=v;
+ sort(values.begin(), values.end());
+ values.erase(unique(values.begin(), values.end()), values.end());
+
+ vector<pair<int,int>>pairs(values.size());
+ vector<int>coord(values.size());
+
+ for(int i=0; i<values.size(); i++){pairs[i]={values[i],i};}
+ sort(pairs.begin(),pairs.end());
+ 
+ int nxt=0;
+ for(int i=0; i<values.size(); i++){
+    if(i && pairs[i-1].first!=pairs[i].first) nxt++;
+    coord[pairs[i].second]=nxt;
+ }
+
+ for(auto &x: v){
+    int i=lower_bound(values.begin(),values.end(),x)-values.begin(); 
+    x=coord[i];
+ }
+
+ segtree st;
+ st.init(n);
+
+ vector<int>last(n,-1);
+
+ for(int i=0; i<n; i++){
+    if(last[v[i]]!=-1){
+        st.set(last[v[i]],0);
+    }
+    last[v[i]]=i;
+    st.set(i,1);
+    for(auto x: lefts[i]){
+        int temp=st.calc(x.first,n);
+        ans[x.second]=temp;
+    }
+ }
+ for(auto x: ans) cout<<x<<"\n";

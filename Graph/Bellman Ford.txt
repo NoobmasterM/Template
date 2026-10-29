@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace std;
+using namespace __gnu_pbds;
+ 
+template<typename T> using ordered_multiset = tree<T, null_type, less_equal<T>, rb_tree_tag, tree_order_statistics_node_update>;
+template<typename Key, typename Value> using ordered_map = tree<Key, Value, less<Key>, rb_tree_tag, tree_order_statistics_node_update>;
+ 
+int main(){
+int n,k;
+cin>>n>>k;
+ 
+vector<vector<pair<long long,long long>>> adj(n);
+vector<long long>dist(n,1e18);
+vector<bool>vis(n,0);
+
+while(k--){
+  long long a,b,w;
+  cin>>a>>b>>w;
+  adj[a-1].push_back({b-1,w});
+ }
+ 
+ for(int i=0; i<n; i++){
+    if(!vis[i]){
+        dist[i]=0;
+        queue<int>q;
+        q.push(i);
+        while(!q.empty()){
+            int u=q.front();
+            q.pop();
+            for(auto x: adj[u]) if(!vis[x.first]) {q.push(x.first); vis[x.first]=1;}
+        }
+    }
+ }
+
+
+ vector<int>par(n,0);
+ 
+ for(int i=0; i<n-1; i++){
+    for(int u=0; u<n; u++){
+        if(dist[u]==1e18) continue;
+        for(auto x: adj[u])  if(dist[u]+x.second<dist[x.first]){dist[x.first]=min(dist[u]+x.second,dist[x.first]); par[x.first]=u;}
+    }
+ }
+
+  
+ queue<int>q;
+ int last=-1;
+ for(int u=0; u<n; u++){
+    if(dist[u]==1e18) continue;
+     for(auto x: adj[u]) if(dist[u]+x.second<dist[x.first]) {q.push(x.first); last=x.first;}
+ }
+ vector<bool>is_neg(n,0);
+ 
+ while(!q.empty()){
+   int u=q.front();
+   q.pop();
+   is_neg[u]=1;
+   for(auto x: adj[u]){
+     if(!is_neg[x.first]) q.push(x.first);
+   }
+ }
+ 
+ 
+ if(last==-1){cout<<"NO\n";}
+ else{
+  vector<int>cycle;
+  for(int i=0; i<n; i++)last=par[last];
+
+  int cur=last;
+  do{cycle.push_back(cur); cur=par[cur];}while(cur!=last);
+
+  cycle.push_back(last);
+  reverse(cycle.begin(),cycle.end());
+  cout<<"YES\n";
+  for(auto x: cycle) cout<<x+1<<" ";
+ }
+}

@@ -1,0 +1,281 @@
+--------------HP Start and End at 1,n-------------------------
+ int n,m;
+ cin>>n>>m; 
+
+ long long mod=1e9+7;
+
+ vector<vector<long long>>dp(1<<n,vector<long long>(n));
+ vector<vector<int>>cadj(n);
+
+ while(m--){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    cadj[v].push_back(u);
+ }
+
+ dp[1][0]=1;
+ 
+ for(int s=2; s<(1<<n); s++){
+    if((s&1)==0) continue;
+
+    if((s&(1<<n-1)) && s!=((1<<n)-1)) continue;
+ 
+    for(int d=0; d<n; d++){
+        if((s&(1<<d))==0) continue;
+
+        int prev=s^(1<<d);
+        for(int j: cadj[d]){
+            if(s&(1<<j)){
+            dp[s][d]+=dp[prev][j];
+            dp[s][d]%=mod;
+          }
+        }
+    }
+ }
+
+ cout<<dp[(1<<n)-1][n-1]<<"\n";
+
+----------------------------------HP ends at i-------------------------------
+ int n,m;
+ cin>>n>>m; 
+
+ long long mod=1e9+7;
+
+ vector<vector<long long>>dp(1<<n,vector<long long>(n));
+ vector<vector<int>>cadj(n);
+
+ vector<vector<bool>>ache(n,vector<bool>(n,0));
+
+ while(m--){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    cadj[v].push_back(u);
+    cadj[u].push_back(v);
+    ache[u][v]=ache[v][u]=1;
+ }
+
+  for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)==1){
+      for(int j=0; j<n; j++){
+         if((s&(1<<j))) dp[s][j]=1;
+      }
+    }
+  }
+
+ for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)<=1) continue;
+
+    for(int d=0; d<n; d++){
+        if((s&(1<<d))==0 || (__builtin_ffs(s)==(d+1))) continue;
+        int prev=s^(1<<d);
+        for(int j: cadj[d]){
+            if(s&(1<<j)){
+            dp[s][d]+=dp[prev][j];
+            dp[s][d]%=mod;
+          }
+        }
+    }
+ }
+
+
+ for(int i=0; i<n; i++) cout<<dp[(1<<n)-1][i]<<" ";
+
+----------------------------------No of simple cycles-----------------------
+int n,m;
+ cin>>n>>m; 
+
+ long long mod=1e9+7;
+
+ vector<vector<long long>>dp(1<<n,vector<long long>(n));
+ vector<vector<int>>cadj(n);
+
+ vector<vector<bool>>ache(n,vector<bool>(n,0));
+
+ while(m--){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    cadj[v].push_back(u);
+    cadj[u].push_back(v);
+    ache[u][v]=ache[v][u]=1;
+ }
+
+  for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)==1){
+      for(int j=0; j<n; j++){
+         if((s&(1<<j))) dp[s][j]=1;
+      }
+    }
+  }
+
+ for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)<=1) continue;
+
+    for(int d=0; d<n; d++){
+        if((s&(1<<d))==0 || (__builtin_ffs(s)==(d+1))) continue;
+        int prev=s^(1<<d);
+        for(int j: cadj[d]){
+            if(s&(1<<j)){
+            dp[s][d]+=dp[prev][j];
+            //dp[s][d]%=mod;
+          }
+        }
+    }
+ }
+
+
+ long long ans=0;
+ for(unsigned int s=1; s<(1<<n); s++){
+   if(popcount(s)<=2) continue;
+
+   for(int j=0; j<n; j++){
+      if(ache[__builtin_ffs(s)-1][j]) ans+=dp[s][j];
+     // ans%=mod;
+   }
+ }
+
+ cout<<ans/2;
+
+---------------------------No of simple paths----------------------
+int n,m;
+ cin>>n>>m; 
+
+ long long mod=1e9+7;
+
+ vector<vector<long long>>dp(1<<n,vector<long long>(n));
+ vector<vector<int>>cadj(n);
+
+ vector<vector<bool>>ache(n,vector<bool>(n,0));
+
+ while(m--){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    cadj[v].push_back(u);
+    cadj[u].push_back(v);
+    ache[u][v]=ache[v][u]=1;
+ }
+
+  for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)==1){
+      for(int j=0; j<n; j++){
+         if((s&(1<<j))) dp[s][j]=1;
+      }
+    }
+  }
+
+ for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)<=1) continue;
+
+    for(int d=0; d<n; d++){
+        if((s&(1<<d))==0 || (__builtin_ffs(s)==(d+1))) continue;
+        int prev=s^(1<<d);
+        for(int j: cadj[d]){
+            if(s&(1<<j)){
+            dp[s][d]+=dp[prev][j];
+            dp[s][d]%=mod;
+          }
+        }
+    }
+ }
+
+long long ans=0;
+ for(unsigned int s=1; s<(1<<n); s++){
+   if(popcount(s)==1) continue;
+
+   for(int j=0; j<n; j++){
+      ans+=dp[s][j];
+      ans%=mod;
+   }
+ }
+
+ cout<<ans/2;
+
+-------------------------Shortest HP------------------------
+int n,m;
+ cin>>n>>m; 
+
+ long long mod=1e9+7;
+
+ vector<vector<long long>>dp(1<<n,vector<long long>(n,1e18));
+ vector<vector<int>>cadj(n);
+
+ vector<vector<long long>>ache(n,vector<long long>(n,1e18));
+
+ while(m--){
+    long long u,v,w;
+    cin>>u>>v>>w;
+    u--;
+    v--;
+    cadj[v].push_back(u);
+    ache[u][v]=w;
+ }
+
+  for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)==1){
+      for(int j=0; j<n; j++){
+         if((s&(1<<j))) dp[s][j]=0;
+      }
+    }
+  }
+
+ for(unsigned int s=1; s<(1<<n); s++){
+    if(popcount(s)<=1) continue;
+
+    for(int d=0; d<n; d++){
+        if((s&(1<<d))==0) continue;
+        int prev=s^(1<<d);
+        for(int j: cadj[d]){
+            if(s&(1<<j)){
+            dp[s][d]=min(dp[s][d],dp[prev][j]+ache[j][d]);
+          }
+        }
+    }
+ }
+
+ long long ans=1e18;
+
+ for(int i=0; i<n; i++) ans=min(ans,dp[(1<<n)-1][i]);
+ cout<<ans;
+
+-------------------------------Clique Check-------------------------------
+ int n,m;
+ cin>>n>>m;
+ vector<int>adj(n),check((1<<n),0);
+ 
+ while(m--){
+  int u,v;
+  cin>>u>>v;
+  u--;
+  v--;
+  adj[u]|=(1<<v);
+  adj[v]|=(1<<u);
+ }
+
+ for(int i=0; i<(1<<n); i++){
+   bool temp=1;
+   for(int j=0; j<n; j++){
+     if((i&(1<<j))){
+        if(((adj[j]|(1<<j))&i)!=i) temp=0;
+     }
+     check[i]=temp;
+   }
+ }
+ for(int i=0; i<(1<<n); i++) cout<<check[i];
+
+----------------------------------Subsets------------------------------
+for(int mask=0; mask<(1<<n); mask++){
+  for(int submask=mask; submask!=0; submask=(submask-1)&mask){
+    int subset=mask^submask;
+    
+  }
+ }
+
+ 
+

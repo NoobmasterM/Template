@@ -1,0 +1,73 @@
+struct MST{
+int N;
+vector<int>father;
+vector<int>sizes;
+ 
+ 
+void init() {
+    for (int i = 0; i < N; ++i) {
+        father[i] = i;
+    }
+}
+ 
+int find(int node) {
+    if (father[node] == node) {
+        return node;
+    }
+    return find(father[node]);
+}
+ 
+void unite(int A, int B) {
+    int a = find(A);
+    int b = find(B);
+    
+    if(a!=b){
+        if (sizes[a] < sizes[b]) swap(a,b);
+        sizes[a] += sizes[b];
+        father[b] = a;   
+    }
+}
+};
+ 
+
+
+struct Edge {
+    int u, v, weight;
+    bool operator<(Edge const& other) {
+        return weight < other.weight;
+    }
+};
+
+
+
+ MST m;
+ cin>>m.N;
+ m.father.assign(m.N,0);
+ m.sizes.assign(m.N,1);
+ m.init();
+ vector<Edge> edges;
+
+
+ int k;
+ cin>>k;
+ while(k--){
+    int a,b,c;
+    cin>>a>>b>>c;
+    a--;
+    b--;
+    edges.push_back({a,b,c});
+ }
+ 
+ sort(edges.begin(),edges.end());
+
+ 
+ long long ans=0;
+ for(auto e: edges){
+    if(m.find(e.u)!=m.find(e.v)){
+        ans+=e.weight;
+        m.unite(e.u,e.v);
+    }
+ }
+ 
+ cout<<ans;
+

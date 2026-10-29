@@ -1,0 +1,36 @@
+int log2dist;
+vector<int>par;
+vector<vector<int>>pow2ends;
+
+void init(vector<int>parents){
+  log2dist=ceil(log2(parents.size()+1));
+  par.assign(parents.size()+1,-1);
+  pow2ends.assign(par.size(),vector<int>(log2dist+1));
+
+  par[0]=-1;
+  for(int i=0; i<parents.size(); i++) par[i+1]=parents[i];
+ 
+  for(int i=0; i<par.size(); i++) pow2ends[i][0]=par[i];
+
+  for(int p=1; p<=log2dist; p++){
+    for(int n=0; n<par.size();  n++){
+      int halfway=pow2ends[n][p-1];
+      if(halfway==-1) pow2ends[n][p]=-1;
+      else pow2ends[n][p]=pow2ends[halfway][p-1];
+    }
+  }
+}
+
+int kth_parents(int n,int k){
+  int at=n;
+    
+  for(int pow=0; pow<=log2dist; pow++){
+    if((k&(1<<pow))!=0){
+      at=pow2ends[at][pow];
+      if(at==-1) break;
+    }
+  }
+
+  return at;
+}
+

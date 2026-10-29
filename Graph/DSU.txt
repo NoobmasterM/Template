@@ -1,0 +1,39 @@
+typedef struct dsu{
+int N;
+vector<int>father;
+vector<int>sizes;
+
+void init() {
+    for (int i = 0; i < N; ++i) {
+        father[i] = i;
+    }
+}
+
+int find(int node) {
+    if (father[node] == node) {
+        return node;
+    }
+    return find(father[node]);
+}
+
+void unite(int A, int B) {
+    int a = find(A);
+    int b = find(B);
+    
+    if(a!=b){
+        if (sizes[a] < sizes[b]) swap(a,b);
+        sizes[a] += sizes[b];
+        father[b] = a;   
+    }
+}
+
+};
+
+
+  dsu d;
+  cin>>d.N;
+  d.father.assign(d.N,0);
+  d.sizes.assign(d.N,1);
+  d.init();
+
+

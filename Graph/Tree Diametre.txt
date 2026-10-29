@@ -1,0 +1,43 @@
+vector<vector<int>>adj;
+int N;
+vector<int>toLeaf;
+vector<int>maxLength;
+
+void dfs(int node, int par){
+  for(auto x: adj[node]){
+    if(x!=par){
+      dfs(x,node);
+      toLeaf[node]=max(toLeaf[x]+1,toLeaf[node]);
+    }
+  }
+  
+  int max1=0,max2=0;
+  for(auto x: adj[node]){
+    if(x!=par){
+        if(toLeaf[x]+1>max1){max2=max1; max1=toLeaf[x]+1;} 
+        else if(toLeaf[x]+1<= max1 && toLeaf[x]+1>max2) max2=toLeaf[x]+1;
+    }
+  }
+  maxLength[node]=max1+max2;
+}
+
+int q;
+ cin>>N;
+ q=N-1;
+ adj.assign(N,vector<int>());
+ toLeaf.assign(N,0);
+ maxLength.assign(N,0);
+ while(q--){
+    int a,b;
+    cin>>a>>b;
+    a--;
+    b--;
+    adj[a].push_back(b);
+    adj[b].push_back(a);
+ 
+ }
+ dfs(0,-1);
+ int ans=0;
+ for(auto x: maxLength) ans=max(ans,x);
+ cout<<ans;
+

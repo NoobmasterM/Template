@@ -1,0 +1,162 @@
+
+struct MST{
+int N;
+vector<int>father;
+vector<int>sizes;
+ 
+ 
+void init() {
+    for (int i = 0; i < N; ++i) {
+        father[i] = i;
+    }
+}
+ 
+int find(int node) {
+    if (father[node] == node) {
+        return node;
+    }
+    return find(father[node]);
+}
+ 
+void unite(int A, int B) {
+    int a = find(A);
+    int b = find(B);
+    
+    if(a!=b){
+        if (sizes[a] < sizes[b]) swap(a,b);
+        sizes[a] += sizes[b];
+        father[b] = a;   
+    }
+}
+};
+ 
+
+
+struct Edge {
+    int u, v, weight, id;
+    bool operator<(Edge const& other) {
+        return weight < other.weight;
+    }
+};
+
+vector<vector<pair<int,int>>>adj; 
+int log2dist;
+vector<int>par;
+vector<int>depth;
+
+vector<vector<int>>pow2ends;
+vector<vector<int>>mx;  
+
+void process(int node, int parent, int wt){
+    par[node] = parent;
+    if(node!=parent) depth[node] = depth[parent]+1;
+
+    pow2ends[node][0] = parent;
+    mx[node][0] = wt;
+
+    for(auto x : adj[node]){
+        if(x.first == parent) continue;
+        process(x.first, node, x.second);
+    }
+}
+
+void init(int root){
+    int n = adj.size();
+    log2dist = ceil(log2(n));
+    par.assign(n, -1);
+    depth.assign(n, 0);
+
+    pow2ends.assign(n, vector<int>(log2dist + 1, -1)); mx.assign(n, vector<int>(log2dist + 1, 0));
+
+    process(root, root, 0);
+
+    for(int j = 1; j <= log2dist; j++){
+        for(int i = 0; i < n; i++){
+            int halfway = pow2ends[i][j-1];
+
+            if(halfway==-1){pow2ends[i][j] = -1; mx[i][j] = mx[i][j-1];}
+            else{pow2ends[i][j] = pow2ends[halfway][j-1]; mx[i][j] = max(mx[i][j-1], mx[halfway][j-1]);}
+        }
+    }
+}
+
+pair<int,int> kth_parent(int node, int k){
+    int ans = 0;
+    for(int j = 0; j <= log2dist; j++){
+        if(k & (1<<j)){
+            ans = max(ans, mx[node][j]);
+            node = pow2ends[node][j];
+            if(node == -1) break;
+        }
+    }
+    return {node, ans};
+}
+
+int compute(int u, int v){
+    int ans = 0;
+    if(depth[u] < depth[v])swap(u, v);
+
+    auto x = kth_parent(u, depth[u] - depth[v]);
+    u = x.first;
+    ans = max(ans, x.second);
+
+    if(u == v) return ans;
+
+    for(int j = log2dist; j >= 0; j--){
+        if(pow2ends[u][j] != pow2ends[v][j]){
+            ans = max(ans, mx[u][j]); ans = max(ans, mx[v][j]);
+            u = pow2ends[u][j]; v = pow2ends[v][j];
+        }
+    }
+
+    ans = max(ans, mx[u][0]); ans = max(ans, mx[v][0]);
+    return ans;
+}
+
+MST m;
+ cin>>m.N;
+ m.father.assign(m.N,0);
+ m.sizes.assign(m.N,1);
+ m.init();
+ vector<Edge> edges;
+ vector<Edge> Aedges;
+ adj.resize(m.N);
+
+ int k;
+ cin>>k;
+ for(int i=0; i<k; i++){
+    int a,b,c;
+    cin>>a>>b>>c;
+    a--;
+    b--;
+    edges.push_back({a,b,c,k});
+    Aedges.push_back({a,b,c,k});
+ }
+ 
+ sort(edges.begin(),edges.end());
+
+ map<long long,bool>in_mst;
+
+ long long ans=0;
+ for(auto e: edges){
+    if(m.find(e.u)!=m.find(e.v)){
+        ans+=e.weight;
+        m.unite(e.u,e.v);
+        in_mst[e.id]=1;
+        adj[e.u].push_back({e.v,e.weight});
+        adj[e.v].push_back({e.u,e.weight});
+    }
+ }
+
+ init(0);
+
+ for(int i=0; i<k; i++){
+    if(in_mst[i]) cout<<"YES\n";
+    else{
+        int u=Aedges[i].v;
+        int v=Aedges[i].u;
+        if(Aedges[i].weight-compute(u,v)==0) cout<<"YES\n";
+        else cout<<"NO\n";
+    }
+ }
+

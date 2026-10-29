@@ -1,0 +1,249 @@
+-------------------------Subtree Query-------------
+vector<int>node_id,st_size,track;
+vector<long long>value,orderedvalues;
+vector<vector<int>>adj;
+
+void dfs(int node, int par){
+    node_id.push_back(node);
+    track[node]=node_id.size()-1;
+    orderedvalues.push_back(value[node]);
+
+    st_size[node]=1;
+    for(auto x: adj[node]){
+        if(x!=par){
+          dfs(x,node);
+          st_size[node]+=st_size[x];
+        }
+    }
+}
+
+typedef long long item;
+
+struct segtree{
+    long long size;
+    vector<item> values;
+    item NEUTRAL_ELEMENT=0;
+
+    item merge(const item& a, const item& b){
+      return a+b;
+    }
+
+    item single(const item& v){return v;}
+
+    void init(long long n) {
+        size = 1;
+        while (size < n) size *= 2;
+        values.resize(2 * size);
+    }
+
+    void build(vector<item>& a, long long x, long long lx, long long rx) {
+        if (rx - lx == 1) {if (lx < (long long)a.size()) values[x] = single(a[lx]); else values[x]=NEUTRAL_ELEMENT; return;}
+        long long m = (lx + rx) / 2;
+        build(a, 2 * x + 1, lx, m);
+        build(a, 2 * x + 2, m, rx);
+        values[x] = merge(values[2 * x + 1],values[2 * x + 2]);
+    }
+
+    void build(vector<item>& a){build(a, 0, 0, size);}
+
+    void set(long long i, item& v, long long x, long long lx, long long rx) {
+        if (rx - lx == 1) {values[x] = single(v); return;}
+        long long m = (lx + rx) / 2;
+        if (i < m) set(i, v, 2 * x + 1, lx, m);
+        else set(i, v, 2 * x + 2, m, rx);
+        values[x] = merge(values[2 * x + 1], values[2 * x + 2]);
+    }
+
+    void set(long long i, item& v){set(i, v, 0, 0, size);}
+
+    item calc(long long l, long long r, long long x, long long lx, long long rx) {
+        if (lx >= r || l >= rx) return NEUTRAL_ELEMENT;
+        if (lx >= l && rx <= r) return values[x];
+        long long m = (lx + rx) / 2;
+        return merge(calc(l, r, 2 * x + 1, lx, m),calc(l, r, 2 * x + 2, m, rx));
+    }
+
+    item calc(long long l, long long r){return calc(l, r, 0, 0, size);}
+};
+
+int n,q;
+ cin>>n>>q;
+
+ track.resize(n);
+ st_size.resize(n);
+ value.resize(n);
+ for(auto &x: value) cin>>x;
+
+ adj.resize(n);
+ for(int i=0; i<n-1; i++){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+ }
+
+ dfs(0,-1);
+ value=orderedvalues;
+ segtree st;
+ st.init(n);
+ st.build(value);
+ while(q--){
+    int x;
+    cin>>x;
+    if(x==2){
+        int a;
+        cin>>a;
+        int u=track[a-1];
+        cout<<st.calc(u,u+st_size[a-1])<<"\n";
+    }
+    else{
+       int a;
+       long long v;
+       cin>>a>>v;
+       int u=track[a-1];
+       st.set(u,v);
+    }
+ }
+--------------------------Path Queries-----------------------
+vector<int>node_id,st_size,track;
+vector<long long>value,pathsum;
+vector<vector<int>>adj;
+
+void dfs(int node, int par){
+    node_id.push_back(node);
+    track[node]=node_id.size()-1;
+
+    if(par!=-1) pathsum[track[node]]=value[node]+pathsum[track[par]];
+    else pathsum[track[node]]=value[node];
+
+    st_size[node]=1;
+    for(auto x: adj[node]){
+        if(x!=par){
+          dfs(x,node);
+          st_size[node]+=st_size[x];
+        }
+    }
+}
+
+struct item{long long sum = 0;};
+
+struct segtree{
+    long long size;
+    vector<item> values;
+    vector<long long> lazy;
+    item NEUTRAL_ELEMENT = {0};
+    item merge(item a, item b){return {a.sum + b.sum};}
+    item single(long long v){return {v};}
+
+    void init(long long n){
+        size = 1;
+        while(size < n) size *= 2;
+        values.assign(2 * size, NEUTRAL_ELEMENT);
+        lazy.assign(2 * size, 0);
+    }
+
+    void build(vector<long long>& a, long long x, long long lx, long long rx){
+        if(rx - lx == 1){ if(lx < (long long)a.size()) values[x] = single(a[lx]); return;}
+        long long m = (lx + rx) / 2;
+        build(a, 2*x+1, lx, m);
+        build(a, 2*x+2, m, rx);
+        values[x] = merge(values[2*x+1], values[2*x+2]);
+    }
+
+    void build(vector<long long>& a){build(a, 0, 0, size);}
+    void apply(long long x, long long lx, long long rx, long long v){values[x].sum += v * (rx - lx); lazy[x] += v;}
+    void propagate(long long x, long long lx, long long rx){
+        if(rx - lx == 1) return;
+        if(lazy[x] == 0) return;
+        long long m = (lx + rx) / 2;
+        apply(2*x+1, lx, m, lazy[x]);
+        apply(2*x+2, m, rx, lazy[x]);
+        lazy[x] = 0;
+    }
+
+    void update(long long l, long long r, long long v, long long x, long long lx, long long rx){
+        if(lx >= r || rx <= l) return;
+        if(l <= lx && rx <= r){apply(x, lx, rx, v); return;}
+        propagate(x, lx, rx);
+        long long m = (lx + rx) / 2;
+        update(l, r, v, 2*x+1, lx, m);
+        update(l, r, v, 2*x+2, m, rx);
+        values[x] = merge(values[2*x+1], values[2*x+2]);
+    }
+
+    void update(long long l, long long r, long long v){update(l, r, v, 0, 0, size);}
+
+    item calc(long long l, long long r, long long x, long long lx, long long rx){
+        if(lx >= r || rx <= l) return NEUTRAL_ELEMENT;
+        if(l <= lx && rx <= r) return values[x];
+        propagate(x, lx, rx);
+        long long m = (lx + rx) / 2;
+        item left = calc(l, r, 2*x+1, lx, m);
+        item right = calc(l, r, 2*x+2, m, rx);
+        return merge(left, right);
+    }
+
+    item calc(long long l, long long r){return calc(l, r, 0, 0, size);}
+};
+
+int n,q;
+ cin>>n>>q;
+
+ track.resize(n);
+ st_size.resize(n);
+ value.resize(n);
+ pathsum.resize(n);
+
+ for(auto &x: value) cin>>x;
+
+ adj.resize(n);
+ for(int i=0; i<n-1; i++){
+    int u,v;
+    cin>>u>>v;
+    u--;
+    v--;
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+ }
+
+ dfs(0,-1);
+
+ segtree st;
+ st.init(n);
+ st.build(pathsum);
+ 
+ while(q--){
+    int x;
+    cin>>x;
+    if(x==1){
+        int a;
+        long long v;
+        cin>>a>>v;
+        int u=track[a-1];
+        long long prev=st.calc(u,u+1).sum;
+        long long change=v-value[a-1];
+        value[a-1]=v;
+        st.update(u,u+st_size[a-1],change);
+    }
+    else{
+        int a;
+        cin>>a;
+        int u=track[a-1];
+        cout<<st.calc(u,u+1).sum<<"\n";
+    }
+ }
+
+-----------------------------Euler tour----------
+int timer=0;
+vector<int>start(adj.size());
+vector<int>end(adj.size());
+
+void euler_tour(int at ,int prev){
+    start[at]=timer++;
+    for(auto n: adj[at]){
+        if(n!=prev) euler_tour(n,at);
+    }
+    end[at]=timer;
+}

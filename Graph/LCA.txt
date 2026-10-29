@@ -1,0 +1,63 @@
+vector<vector<int>>adj;
+int log2dist;
+vector<int>par;
+vector<vector<int>>pow2ends;
+vector<int>depth;
+
+void process(int at, int prev){
+  depth[at]=depth[prev]+1;
+  for(auto n: adj[at]){
+    if(n!=prev){
+       process(n,at);
+       par[n]=at;
+    }
+  }
+}
+
+void init(int root){
+  log2dist=ceil(log2(adj.size()));
+  par.assign(adj.size()+1,-1);
+  pow2ends.assign(par.size(),vector<int>(log2dist+1));
+  depth.assign(adj.size(),-1);
+ 
+  process(root,root);
+
+  for(int i=0; i<par.size(); i++) pow2ends[i][0]=par[i];
+
+  for(int p=1; p<=log2dist; p++){
+    for(int n=0; n<par.size();  n++){
+      int halfway=pow2ends[n][p-1];
+      if(halfway==-1) pow2ends[n][p]=-1;
+      else pow2ends[n][p]=pow2ends[halfway][p-1];
+    }
+  }
+}
+
+int kth_parents(int n,int k){
+  int at=n;
+    
+  for(int pow=0; pow<=log2dist; pow++){
+    if((k&(1<<pow))!=0){
+      at=pow2ends[at][pow];
+      if(at==-1) break;
+    }
+  }
+
+  return at;
+}
+
+int lca(int n1, int n2){
+  if(depth[n1]<depth[n2]) return lca(n2,n1);
+
+  n1=kth_parents(n1,depth[n1]-depth[n2]);
+  if(n1==n2) return n2;
+
+  for(int i=log2dist; i>=0; i--){
+    if(pow2ends[n1][i]!=pow2ends[n2][i]){
+      n1=pow2ends[n1][i];
+      n2=pow2ends[n2][i];
+    }
+  }
+  
+  return pow2ends[n1][0];
+}

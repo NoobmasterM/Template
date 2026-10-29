@@ -1,0 +1,104 @@
+vector<vector<int>>adj;
+vector<vector<long long>>capacity;
+vector<int>parent;
+
+bool reachable(int source, int sink){
+    queue<int>q;
+    q.push(source);
+    while(!q.empty()){
+        int node=q.front();
+        q.pop();
+        
+        for(auto x: adj[node]){
+            long long w=capacity[node][x];
+            if(w<=0 || parent[x]!=-1) continue;
+            parent[x]=node;
+            q.push(x);
+        }
+    }
+
+
+    return parent[sink]!=-1;
+}
+
+
+int main(){
+  int n,m;
+  cin>>n>>m;
+  
+  int source=0,sink=n-1;
+
+  adj.resize(n);
+  capacity.assign(n,vector<long long>(n,0));
+  parent.assign(n,-1);
+  vector<pair<int,int>>edges;
+  while(m--){
+    int a,b,w=1;
+    cin>>a>>b;
+    a--;
+    b--;
+    adj[a].push_back(b);
+    adj[b].push_back(a);
+    capacity[a][b]+=w;
+    edges.push_back({a,b});
+  }
+
+
+ 
+  long long flow=0; 
+ 
+  while(reachable(source,sink)){
+    int node=sink;
+    long long curr_flow=1e18;
+    
+    while(node!=source){
+        curr_flow=min(curr_flow, capacity[parent[node]][node]);
+        node=parent[node];
+    }
+
+    node=sink;
+    while(node!=source){
+        capacity[parent[node]][node]-=curr_flow;
+        capacity[node][parent[node]]+=curr_flow;
+        node=parent[node];
+    }
+
+    flow+=curr_flow;
+    parent.assign(n,-1);
+  }
+
+  cout<<flow<<"\n";
+  
+  while(flow--){
+    vector<vector<int>>adj(n);
+    for(auto x: edges){
+        if(capacity[x.first][x.second]==0){
+            adj[x.first].push_back(x.second);
+        }
+    }
+
+    vector<int>ans,vis(n,0);
+    vis[source]=0;
+    ans.push_back(source);
+    queue<int>q;
+    q.push(source);
+    
+    bool done=0;
+    while(!q.empty()){
+        int node=q.front();
+        q.pop();
+
+        for(auto x: adj[node]){
+            if(done) break;
+            if(!vis[x]){vis[x]=1; capacity[node][x]=1; q.push(x); ans.push_back(x); if(x==sink)done=1; break;}
+        }
+        if(done) break;
+    }
+     
+    cout<<ans.size()<<"\n";
+    for(auto x: ans) cout<<x+1<<" ";
+    cout<<"\n";
+  }
+
+
+}

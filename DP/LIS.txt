@@ -1,0 +1,15 @@
+    int n;
+    cin>>n;
+    vector<int>dp;
+    for(int i=1; i<=n; i++){
+        int k; cin>>k;
+        auto it=lower_bound(dp.begin(),dp.end(),k);
+        if(it==dp.end()){
+           dp.push_back(k);
+        }
+        else{
+            *it=k;
+        }
+    }
+ 
+    cout<<dp.size()<<endl;

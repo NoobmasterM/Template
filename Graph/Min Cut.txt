@@ -1,0 +1,85 @@
+vector<vector<int>>adj;
+vector<vector<long long>>capacity;
+vector<int>parent;
+
+bool reachable(int source, int sink){
+    queue<int>q;
+    q.push(source);
+    while(!q.empty()){
+        int node=q.front();
+        q.pop();
+        
+        for(auto x: adj[node]){
+            long long w=capacity[node][x];
+            if(w<=0 || parent[x]!=-1) continue;
+            parent[x]=node;
+            q.push(x);
+        }
+    }
+
+
+    return parent[sink]!=-1;
+}
+
+
+int main(){
+  int n,m;
+  cin>>n>>m;
+  
+  int source=0,sink=n-1;
+
+  adj.resize(n);
+  capacity.assign(n,vector<long long>(n,0));
+  parent.assign(n,-1);
+  
+  vector<pair<int,int>>edges;
+
+  while(m--){
+    int a,b,w=1;
+    cin>>a>>b;
+    a--;
+    b--;
+    adj[a].push_back(b);
+    adj[b].push_back(a);
+    capacity[a][b]+=w;
+    capacity[b][a]+=w;
+    edges.push_back({a,b});
+
+  }
+
+
+ 
+  long long flow=0; 
+ 
+  while(reachable(source,sink)){
+    int node=sink;
+    long long curr_flow=1e18;
+
+    while(node!=source){
+        curr_flow=min(curr_flow, capacity[parent[node]][node]);
+        node=parent[node];
+    }
+
+    node=sink;
+    while(node!=source){
+        capacity[parent[node]][node]-=curr_flow;
+        capacity[node][parent[node]]+=curr_flow;
+        node=parent[node];
+    }
+
+    flow+=curr_flow;
+    parent.assign(n,-1);
+  }
+
+ 
+
+  cout<<flow<<"\n";
+  reachable(source,sink);
+  parent[source]=source;
+
+  for(auto x: edges){
+    if(parent[x.first]==-1 && parent[x.second]!=-1) {cout<<x.first+1<<" "<<x.second+1<<"\n";}
+    else if(parent[x.first]!=-1 && parent[x.second]==-1) {cout<<x.first+1<<" "<<x.second+1<<"\n";}
+  }
+
+}
